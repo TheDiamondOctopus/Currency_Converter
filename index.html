@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <style>
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+        -moz-appearance:textfield;
+        }
+
+        body {
+            font-family: 'Raleway', sans-serif;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-rows: 1fr 3fr;
+
+            grid-template-areas: 
+                "header"
+                "maincontent";
+        }
+
+        .header {
+            grid-area: header;
+            font-size: 2rem;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .content-card {
+            border: 1px solid #dfe1e5;
+            border-radius: 25px;
+            height: 20rem;
+            width: 50rem;
+            margin: auto;
+
+            grid-area: maincontent;
+
+            display: grid;
+            grid-template-rows: 3fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
+
+            grid-template-areas: 
+                "amount type"
+                "input1 selector1"
+                "input2 selector2";
+        }
+
+        .currency-amount-field {
+            grid-area: amount;
+            font-size: 3rem;
+            padding: 2rem;
+            text-align: center;
+            color: rgb(15, 157, 88);
+        }
+
+        .currency-type {
+            grid-area: type;
+            font-size: 3rem;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .input1 {
+            grid-area: input1;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .selector1 {
+            grid-area: selector1;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .input2 {
+            grid-area: input2;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .selector2 {
+            grid-area: selector2;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .from_to {
+            color: #bab8b8;
+            margin-left: .5rem;
+            width: 2rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-container">
+        <div class="header">Currency Converter</div>
+
+        <!-- Creates a Card layout for the Currency Calculator -->
+        <div class="content-card">
+                <div id="CAF" class="currency-amount-field">0.00</div>
+
+                <div id="CT" class="currency-type"></div>
+                
+                <div class="input1">
+                    <input id="I00" type="number"><div class="from_to">from</div>
+                </div>
+                <div class="selector1">
+                    <select name="" id="S00">
+                        <option value="USD">United States Dollar</option>
+                        <option value="EUR">Euro</option>
+                    </select>
+                </div>
+
+                <div class="input2">
+                    <input id="I11"  type="number"><div class="from_to">to</div>
+                </div>
+                <div class="selector2">
+                    <select name="" id="S11">
+                        <option value="USD">United States Dollar</option>
+                        <option value="EUR" selected>Euro</option>
+                    </select>
+                </div>                 
+        </div>
+    </div>
+
+    <script>
+        let fromType = document.getElementById("S00").value;
+        let toType = document.getElementById("S11").value;
+
+        //Using https://exchangeratesapi.io/ API. Thank you Exchange Rates API for allowing free and open use of your API.
+        $.get("https://api.exchangeratesapi.io/latest?symbols=USD", function(data){
+
+            //This function calculates the currency conversion using the exchange rate provided by the Exchange Rates API
+            let cc = function calculateConversion(fromValue, fromType, toType) {
+                let result = 0;
+                let exchangeRate = data.rates.USD; //USD exchange rate value grabbed from https://exchangeratesapi.io/
+                // console.log(exchangeRate);
+                if(fromType == "USD" && toType == "EUR"){
+                    result = fromValue/exchangeRate;
+                }
+                else if(fromType == "EUR" && toType == "USD"){
+                    result = fromValue*exchangeRate;
+                }
+                else if((fromType == "USD" && toType == "USD") || (fromType == "EUR" && toType == "EUR")){
+                    result = fromValue*1;
+                }
+                return result.toFixed(2);
+            } 
+
+            //Detects changes in the input1 field and updates the input2 field with the new value.
+            //The calculator only converts in one direction. Only input in the input1 field (top input field) is converted 
+            //and the converted value is shown in input2 (bottom input field).
+            $("#I00").change(function(){
+                let fromValue = document.getElementById("I00").value;
+                let fromType = document.getElementById("S00").value;
+                let toType = document.getElementById("S11").value;
+                $("#I11").val(cc(fromValue, fromType, toType));
+                $("#CAF").html(cc(fromValue, fromType, toType));
+                $("#CT").html(toType);
+            })
+
+            //Detects changes in the selector1 field. If selector1 and selector2 field are the same, then the exchange rate value
+            //is shown as equal in both input1 and input2 fields.
+            $("#S00").change(function(){
+                let fromValue = document.getElementById("I00").value;
+                let fromType = document.getElementById("S00").value;
+                let toType = document.getElementById("S11").value;
+                $("#I11").val(cc(fromValue, fromType, toType));
+                $("#CAF").html(cc(fromValue, fromType, toType));
+                $("#CT").html(toType);
+            })
+
+            //Detects changes in the selector2 field. If selector1 and selector2 field are the same, then the exchange rate value
+            //is shown as equal in both input1 and input2 fields.
+            $("#S11").change(function(){
+                let fromValue = document.getElementById("I00").value;
+                let fromType = document.getElementById("S00").value;
+                let toType = document.getElementById("S11").value;
+                $("#I11").val(cc(fromValue, fromType, toType));
+                $("#CAF").html(cc(fromValue, fromType, toType));
+                $("#CT").html(toType);
+            })
+        });
+    </script>
+</body>
+</html>
